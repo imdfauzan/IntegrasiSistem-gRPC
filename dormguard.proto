@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package dormguard;
+
+// Service 1: Pengaturan Akses Pintu
+service AccessControl {
+  rpc ValidateEntry(AccessRequest) returns (AccessResponse);
+}
+
+// Service 2: Monitor Sensor (Client-side Streaming)
+service SecurityMonitor {
+  rpc StreamSensorData(stream SensorData) returns (MonitorSummary);
+}
+
+// Service 3: Notifikasi Darurat (Server-side Streaming)
+service Notification {
+  rpc SubscribeAlerts(SubscribeRequest) returns (stream AlertMessage);
+}
+
+message AccessRequest {
+  string resident_id = 1;
+  string door_id = 2;
+}
+
+message AccessResponse {
+  bool granted = 1;
+  string message = 2;
+}
+
+message SensorData {
+  string sensor_id = 1;
+  float temperature = 2;
+}
+
+message MonitorSummary {
+  string status = 1;
+  int32 total_packets_received = 2;
+}
+
+message SubscribeRequest {
+  string resident_id = 1;
+}
+
+message AlertMessage {
+  string type = 1;
+  string description = 2;
+}
