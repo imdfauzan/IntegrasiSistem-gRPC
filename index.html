@@ -1,78 +1,237 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>DormGuard Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DormGuard | Professional Security Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+    </style>
 </head>
-<body class="bg-gray-900 text-white p-8">
-    <h1 class="text-3xl font-bold mb-6">🛡️ DormGuard Real-Time Dashboard</h1>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-gray-800 p-6 rounded-lg border-l-8 border-green-500" id="status-card">
-            <h2 class="text-xl">System Status</h2>
-            <p id="status-text" class="text-4xl font-black text-green-500">SAFE</p>
-        </div>
+<body class="text-slate-200 min-h-screen p-4 md:p-8">
 
-        <div class="bg-gray-800 p-6 rounded-lg md:col-span-2">
-            <h2 class="text-xl mb-4">Live Temperature Feed</h2>
-            <canvas id="tempChart" height="100"></canvas>
-        </div>
+    <div class="max-w-7xl mx-auto">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+            <div>
+                <h1 class="text-4xl font-extrabold tracking-tight text-white flex items-center gap-3">
+                    <i data-lucide="shield-check" class="text-blue-500 w-10 h-10"></i>
+                    DormGuard <span class="text-blue-500 text-lg font-normal">v2.0</span>
+                </h1>
+                <p class="text-slate-400 mt-1">Smart Dormitory Real-Time Security Interface</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div id="conn-status"
+                    class="flex items-center gap-2 px-4 py-2 rounded-full glass text-sm font-medium border-yellow-500/50 text-yellow-500">
+                    <span class="w-2 h-2 rounded-full bg-yellow-500 status-pulse"></span>
+                    Connecting to WebSocket...
+                </div>
+            </div>
+        </header>
 
-        <div class="bg-gray-800 p-6 rounded-lg">
-            <h2 class="text-xl mb-4">Access Logs</h2>
-            <ul id="log-list" class="text-sm space-y-2 max-h-64 overflow-y-auto"></ul>
-        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        <div class="bg-gray-800 p-6 rounded-lg">
-            <h2 class="text-xl mb-4">Command Center</h2>
-            <button onclick="resetSystem()" class="bg-red-600 hover:bg-red-700 p-3 rounded w-full font-bold">
-                RESET ALARM SYSTEM
-            </button>
+            <div class="lg:col-span-4 space-y-6">
+
+                <div id="status-card"
+                    class="glass rounded-3xl p-8 transition-all duration-500 border-l-8 border-emerald-500">
+                    <div class="flex justify-between items-start mb-4">
+                        <span class="text-slate-400 font-medium uppercase tracking-wider text-xs">System Security
+                            State</span>
+                        <i data-lucide="activity" class="text-slate-500 w-5 h-5"></i>
+                    </div>
+                    <h2 id="status-text" class="text-5xl font-black text-emerald-500 tracking-tighter">SAFE</h2>
+                    <p id="status-desc" class="text-slate-400 mt-2 text-sm">All sensors reporting normal parameters.</p>
+                </div>
+
+                <div class="glass rounded-3xl p-8">
+                    <h3 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <i data-lucide="terminal" class="text-blue-400 w-5 h-5"></i> Command Center
+                    </h3>
+                    <p class="text-xs text-slate-500 mb-6 italic">Authorized administrative actions only.</p>
+                    <button onclick="resetSystem()"
+                        class="group relative w-full overflow-hidden rounded-2xl bg-slate-700 p-4 font-bold transition-all hover:bg-red-600 active:scale-95">
+                        <span class="relative z-10 flex items-center justify-center gap-2">
+                            <i data-lucide="rotate-ccw" class="w-5 h-5 transition-transform group-hover:rotate-180"></i>
+                            RESET SYSTEM ALARM
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-8 space-y-6">
+
+                <div class="glass rounded-3xl p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-semibold flex items-center gap-2">
+                            <i data-lucide="thermometer" class="text-orange-400 w-5 h-5"></i> Environmental Telemetry
+                        </h3>
+                        <span id="live-temp" class="text-2xl font-mono font-bold text-blue-400">00.0°C</span>
+                    </div>
+                    <div class="h-[300px] w-full">
+                        <canvas id="tempChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="glass rounded-3xl p-8">
+                    <h3 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                        <i data-lucide="list-tree" class="text-purple-400 w-5 h-5"></i> Access & Security Logs
+                    </h3>
+                    <div id="log-list" class="space-y-3 h-48 overflow-y-auto pr-2">
+                        <div class="text-slate-500 text-sm italic">Waiting for system logs...</div>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
 
     <script>
+        // Initialize Icons
+        lucide.createIcons();
+
         const ws = new WebSocket('ws://localhost:8080');
-        
-        // Inisialisasi Chart.js
+        const connStatus = document.getElementById('conn-status');
+
+        // Chart.js Configuration with Modern Gradient
         const ctx = document.getElementById('tempChart').getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)');
+        gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+
         const chart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{ label: 'Temp (°C)', data: [], borderColor: '#3b82f6' }] }
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Live Temperature',
+                    data: [],
+                    borderColor: '#3b82f6',
+                    borderWidth: 3,
+                    fill: true,
+                    backgroundColor: gradient,
+                    tension: 0.4,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: {
+                        grid: { color: 'rgba(255,255,255,0.05)' },
+                        ticks: { color: '#64748b' }
+                    }
+                }
+            }
         });
+
+        ws.onopen = () => {
+            connStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> WebSocket Connected';
+            connStatus.className = 'flex items-center gap-2 px-4 py-2 rounded-full glass text-sm font-medium border-emerald-500/50 text-emerald-500';
+        };
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
 
-            // Logika Update UI Berdasarkan Event
             if (data.event === 'SENSOR_UPDATE') {
-                // Update Grafik
+                document.getElementById('live-temp').innerText = `${data.temperature.toFixed(1)}°C`;
                 chart.data.labels.push(new Date().toLocaleTimeString());
                 chart.data.datasets[0].data.push(data.temperature);
-                if (chart.data.labels.length > 10) { chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
-                chart.update();
+                if (chart.data.labels.length > 15) {
+                    chart.data.labels.shift();
+                    chart.data.datasets[0].data.shift();
+                }
+                chart.update('none');
             }
 
-            if (data.event === 'SYSTEM_ALERT') {
-                const isEmergency = data.message.includes('BAHAYA');
-                document.getElementById('status-text').innerText = isEmergency ? 'EMERGENCY' : 'SAFE';
-                document.getElementById('status-card').style.borderColor = isEmergency ? 'red' : 'green';
-                alert(data.message); // FITUR 3: Server-Initiated Alert
+            if (data.event === 'SYSTEM_ALERT' || data.event === 'SYSTEM_STATUS') {
+                const isEmergency = data.status === 'EMERGENCY' || (data.message && data.message.includes('BAHAYA'));
+                const statusCard = document.getElementById('status-card');
+                const statusText = document.getElementById('status-text');
+                const statusDesc = document.getElementById('status-desc');
+
+                if (isEmergency) {
+                    statusCard.className = 'glass rounded-3xl p-8 transition-all duration-500 border-l-8 border-red-500 bg-red-500/10';
+                    statusText.innerText = 'EMERGENCY';
+                    statusText.className = 'text-5xl font-black text-red-500 tracking-tighter status-pulse';
+                    statusDesc.innerText = data.message || 'Critical alert triggered by sensors!';
+                } else {
+                    statusCard.className = 'glass rounded-3xl p-8 transition-all duration-500 border-l-8 border-emerald-500';
+                    statusText.innerText = 'SAFE';
+                    statusText.className = 'text-5xl font-black text-emerald-500 tracking-tighter';
+                    statusDesc.innerText = 'All systems functioning within normal parameters.';
+                }
             }
 
             if (data.event === 'ACCESS_LOG') {
-                const li = document.createElement('li');
-                li.innerText = `[${new Date().toLocaleTimeString()}] ${data.message} - ${data.status}`;
-                li.className = data.status === 'SUCCESS' ? 'text-green-400' : 'text-red-400';
-                document.getElementById('log-list').prepend(li);
+                const logList = document.getElementById('log-list');
+                if (logList.innerHTML.includes('Waiting')) logList.innerHTML = '';
+
+                const div = document.createElement('div');
+                div.className = 'flex justify-between items-center p-3 rounded-xl bg-slate-800/50 border border-white/5 animate-fade-in';
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="p-2 rounded-lg ${data.status === 'SUCCESS' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500'}">
+                            <i data-lucide="${data.status === 'SUCCESS' ? 'user-check' : 'user-x'}" class="w-4 h-4"></i>
+                        </div>
+                        <span class="text-sm font-medium">${data.message}</span>
+                    </div>
+                    <span class="text-[10px] text-slate-500">${new Date().toLocaleTimeString()}</span>
+                `;
+                logList.prepend(div);
+                lucide.createIcons();
             }
         };
 
-        // FITUR 4: Kirim Instruksi ke Backend
         function resetSystem() {
             ws.send(JSON.stringify({ type: 'RESET_SYSTEM' }));
         }
     </script>
 </body>
+
 </html>
